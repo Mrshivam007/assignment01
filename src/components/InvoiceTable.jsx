@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Button,
@@ -12,6 +12,7 @@ import {
   TableContainer,
   Typography,
 } from "@mui/material";
+import axios from 'axios';
 
 import profile from "../assets/logo/no-profile.jpeg";
 import { ClientInfo, Status, ActionsCol, CreateInvoice, Search } from ".";
@@ -20,6 +21,39 @@ const InvoiceTable = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [invoices, setInvoices] = useState(data);
+  const [Data, setData] = useState([]);
+
+
+  const fetchData = async () => {
+    const response = await axios.get('http://localhost:3001/posts');
+    // setData(response.data);
+  };
+
+  const getData = async () => {
+    const response = await axios.get('https://reqres.in/api/users?page=2');
+    setData(response.data);
+  };
+
+  useEffect(() => {
+    getData();
+  }, []);
+  console.log("getting real data ", Data.data);
+
+  const addData = async (newData) => {
+    await axios.post('http://localhost:3001/posts', newData);
+    fetchData();
+  };
+
+  const updateData = async (id, updatedData) => {
+    await axios.put(`http://localhost:3001/posts/${id}`, updatedData);
+    fetchData();
+  };
+
+  const deleteData = async (id) => {
+    await axios.delete(`http://localhost:3001/posts/${id}`);
+    fetchData();
+  };
+
 
   const [open, setOpen] = useState(false);
   const handleOpen = () => setOpen(true);
@@ -34,6 +68,25 @@ const InvoiceTable = () => {
     "BALANCE",
     "ACTION",
   ];
+
+  const [desable, setDesable] = useState(false);
+
+  useEffect(() => {
+    const DesableTime = setTimeout(() => {
+      setDesable(true)
+    }, 10000)
+
+    return () => {
+      clearTimeout(DesableTime);
+    };
+  })
+
+  // const handleDesable = () => {
+  //   setDesable(true);
+  //   setTimeout(() => {
+  //     setDesable(false);
+  //   }, 5000)
+  // }
 
   const [editableRows, setEditableRows] = useState([]);
 
@@ -92,6 +145,12 @@ const InvoiceTable = () => {
     filterInvoices(searchQuery, e.target.value);
   };
 
+  const clearFilters = () => {
+    setSearchQuery('');
+    setStatusFilter('');
+    filterInvoices('', ''); // Reset filters
+  };
+
   const filterInvoices = (searchQuery, statusFilter) => {
     const filteredData = invoices.filter((invoice) => {
       const clientMatch = invoice.client
@@ -141,12 +200,19 @@ const InvoiceTable = () => {
           >
             + Create Invoice
           </Button>
+          {/* <Box sx={{ display: "flex", gap: "10px" }}>
+          
+            <Button variant="contained" color="secondary" disabled={desable}>
+              Reload Button
+            </Button>
+          {/* </Box> */}
           <Box sx={{ display: "flex", gap: "10px" }}>
             <Search
               statusFilter={statusFilter}
               searchQuery={searchQuery}
               handleSearchChange={handleSearchChange}
               handleFilterChange={handleChange}
+              handleClearChange={clearFilters}
             />
           </Box>
         </Container>
@@ -165,117 +231,117 @@ const InvoiceTable = () => {
             <TableBody>
               {!filteredInvoices.length === false
                 ? filteredInvoices.map((row, index) => (
-                    <TableRow
-                      key={index}
-                      sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-                    >
-                      <TableCell>
-                        <Typography color={"purple"}>#{row.id}</Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Status invoiceStatus={row.status} />
-                      </TableCell>
-                      <TableCell>
-                        <ClientInfo
-                          rowId={row.id}
-                          editable={editableRows.includes(row.id)}
-                          handleInputChange={handleInputChange}
-                          index={index}
-                          name={row.client}
-                          mail={row.email}
-                          logo={profile}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        {editableRows.includes(row.id) ? (
-                          <>
-                            #
-                            <input
-                              type="number"
-                              value={row.amount}
-                              onChange={(e) =>
-                                handleInputChange(e, index, row.id, "amount")
-                              }
-                              style={{ width: "50%" }}
-                            />
-                          </>
-                        ) : (
-                          <Typography color={"GrayText"}>
-                            ${row.amount}
-                          </Typography>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {editableRows.includes(row.id) ? (
-                          <>
-                            <input
-                              type="date"
-                              value={row.date}
-                              onChange={(e) =>
-                                handleInputChange(e, index, row.id, "date")
-                              }
-                              // style={{ width: "90%" }}
-                            />
-                          </>
-                        ) : (
-                          <Typography color={"GrayText"}>{row.date}</Typography>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {editableRows.includes(row.id) ? (
-                          <>
-                            #
-                            <input
-                              type="number"
-                              value={row.balance}
-                              onChange={(e) =>
-                                handleInputChange(e, index, row.id, "balance")
-                              }
-                              style={{ width: "50%" }}
-                            />
-                          </>
-                        ) : row.balance == 0 ? (
-                          <Typography
-                            variant="caption"
-                            color={"#2b992b"}
-                            sx={{
-                              p: "5% 15%",
-                              borderRadius: "30px",
-                              textAlign: "center",
-                              fontWeight: "bolder",
-                              bgcolor: "lightgreen",
-                            }}
-                          >
-                            Paid
-                          </Typography>
-                        ) : (
-                          <Typography color={"GrayText"}>
-                            ${row.balance}
-                          </Typography>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <ActionsCol
-                          rowId={row.id}
-                          data={filteredInvoices}
-                          setData={setFilteredInvoices}
-                          editable={editableRows.includes(row.id)}
-                          handleEdit={handleToggleEdit}
-                          setEditableRow={setEditableRows}
-                        />
-                      </TableCell>
-                    </TableRow>
-                  ))
-                : searchQuery !== "" &&
-                  filterInvoices !== "" && (
-                    <TableRow>
-                      <TableCell colSpan={12}>
-                        <Typography variant="h4" textAlign="center">
-                          Match Not Found :(
+                  <TableRow
+                    key={index}
+                    sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+                  >
+                    <TableCell>
+                      <Typography color={"purple"}>#{row.id}</Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Status invoiceStatus={row.status} />
+                    </TableCell>
+                    <TableCell>
+                      <ClientInfo
+                        rowId={row.id}
+                        editable={editableRows.includes(row.id)}
+                        handleInputChange={handleInputChange}
+                        index={index}
+                        name={row.client}
+                        mail={row.email}
+                        logo={profile}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      {editableRows.includes(row.id) ? (
+                        <>
+                          #
+                          <input
+                            type="number"
+                            value={row.amount}
+                            onChange={(e) =>
+                              handleInputChange(e, index, row.id, "amount")
+                            }
+                            style={{ width: "50%" }}
+                          />
+                        </>
+                      ) : (
+                        <Typography color={"GrayText"}>
+                          ${row.amount}
                         </Typography>
-                      </TableCell>
-                    </TableRow>
-                  )}
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {editableRows.includes(row.id) ? (
+                        <>
+                          <input
+                            type="date"
+                            value={row.date}
+                            onChange={(e) =>
+                              handleInputChange(e, index, row.id, "date")
+                            }
+                          // style={{ width: "90%" }}
+                          />
+                        </>
+                      ) : (
+                        <Typography color={"GrayText"}>{row.date}</Typography>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {editableRows.includes(row.id) ? (
+                        <>
+                          #
+                          <input
+                            type="number"
+                            value={row.balance}
+                            onChange={(e) =>
+                              handleInputChange(e, index, row.id, "balance")
+                            }
+                            style={{ width: "50%" }}
+                          />
+                        </>
+                      ) : row.balance == 0 ? (
+                        <Typography
+                          variant="caption"
+                          color={"#2b992b"}
+                          sx={{
+                            p: "5% 15%",
+                            borderRadius: "30px",
+                            textAlign: "center",
+                            fontWeight: "bolder",
+                            bgcolor: "lightgreen",
+                          }}
+                        >
+                          Paid
+                        </Typography>
+                      ) : (
+                        <Typography color={"GrayText"}>
+                          ${row.balance}
+                        </Typography>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <ActionsCol
+                        rowId={row.id}
+                        data={filteredInvoices}
+                        setData={setFilteredInvoices}
+                        editable={editableRows.includes(row.id)}
+                        handleEdit={handleToggleEdit}
+                        setEditableRow={setEditableRows}
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))
+                : searchQuery !== "" &&
+                filterInvoices !== "" && (
+                  <TableRow>
+                    <TableCell colSpan={12}>
+                      <Typography variant="h4" textAlign="center">
+                        Match Not Found :(
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
+                )}
             </TableBody>
           </Table>
         </TableContainer>

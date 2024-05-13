@@ -1,4 +1,5 @@
 import {
+  Button,
   FormControl,
   InputLabel,
   MenuItem,
@@ -12,7 +13,9 @@ const Search = ({
   searchQuery,
   handleSearchChange,
   handleFilterChange,
+  handleClearChange
 }) => {
+
   return (
     <>
       <TextField
@@ -37,6 +40,10 @@ const Search = ({
           <MenuItem value={"in progress"}>In Progress</MenuItem>
         </Select>
       </FormControl>
+      <Button variant="contained" sx={{backgroundColor: 'red'}} onClick={() => handleClearChange()}
+>
+        Clear
+      </Button>
     </>
   );
 };

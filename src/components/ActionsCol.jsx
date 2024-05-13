@@ -15,10 +15,23 @@ const ActionsCol = ({
   setEditableRow,
   handleEdit,
 }) => {
+  // const handleDelete = (rowId) => {
+  //   console.log("Getting row id", rowId);
+  //   const updatedInvoices = data.map((invoice) => {
+  //     if (invoice.id === rowId) {
+  //       return null; // Return null for the row to be deleted
+  //     }
+  //     return invoice;
+  //   }).filter(Boolean); // Filter out null values
+  //   setData(updatedInvoices);
+  // };
+
   const handleDelete = (rowId) => {
+    console.log("getting row id", rowId);
     const updatedInvoices = data.filter((invoice) => invoice.id !== rowId);
     setData(updatedInvoices);
   };
+  
 
   const handleEditIconClick = (rowEditId) => {
     handleEdit(rowEditId);
